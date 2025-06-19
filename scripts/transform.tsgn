@@ -1,0 +1,319 @@
+% insert nofa(noun form of adjective) pos tag
+/^NP`case~nc,mod~nm,fin~f'.*$/=x <: 身長
+
+relabel x /NP`case~nc,mod~nm,fin~f,nofa~true';名詞;一般;*/
+
+/^NP`case~nc,mod~nm,fin~f'.*$/=x <: 体重
+
+relabel x /NP`case~nc,mod~nm,fin~f,nofa~true';名詞;一般;*/
+
+/^<S`.*'\/S`.*'>\\NP`(?!.*nofa~true).*'.*$/=x <: は $-- (/^NP`.*'$/ <- /^NP`.*nofa~true.*'.*$/)
+
+relabel x /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f,nofa~true';助詞;係助詞;*/
+
+% fix PC-6082
+/^NP`.*'$/=x <, (/^NP`.*'.*$/ <: PC) <- (/^NP`.*'$/ <, (/^NP`.*'.*/ <: /-/) <- (/^NP`.*'.*/ <: /6082/))
+
+relabel x /NP`case~nc,mod~nm,fin~f';名詞;固有名詞;*;*/
+replace x (NP`case~nc,mod~nm,fin~f';名詞;固有名詞;*;* PC-6082)
+
+% fix ITEL-XZ
+/^NP`.*'$/=x <, (/^NP`.*'.*$/ <: ITEL) <- (/^NP`.*'$/ <, (/^NP`.*'.*/ <: /-/) <- (/^NP`.*'.*/ <: XZ))
+
+relabel x /NP`case~nc,mod~nm,fin~f';名詞;固有名詞;*;*/
+replace x (NP`case~nc,mod~nm,fin~f';名詞;固有名詞;*;* ITEL-XZ)
+
+% fix ITEL-ZX
+/^NP`.*'$/=x <, (/^NP`.*'.*$/ <: ITEL) <- (/^NP`.*'$/ <, (/^NP`.*'.*/ <: /-/) <- (/^NP`.*'.*/ <: ZX))
+
+relabel x /NP`case~nc,mod~nm,fin~f';名詞;固有名詞;*;*/
+replace x (NP`case~nc,mod~nm,fin~f';名詞;固有名詞;*;* ITEL-ZX)
+
+% fix ITEL-ZY
+/^NP`.*'$/=x <, (/^NP`.*'.*$/ <: ITEL) <- (/^NP`.*'$/ <, (/^NP`.*'.*/ <: /-/) <- (/^NP`.*'.*/ <: ZY))
+
+replace x (NP`case~nc,mod~nm,fin~f';名詞;固有名詞;*;* ITEL-ZY)
+
+% 早起き -> 形容動詞語幹
+/^S`.*'\\NP`.*'(?!.*形容動詞語幹).*$/=x <: 早起き
+
+relabel x /S`mod~nm,form~cont,fin~f'\\NP`case~ga,mod~nm,fin~f';名詞;形容動詞語幹;*;*/
+
+% add adj pos tag (ex. 太郎は次郎より多くの本を買った。)
+/^S`.*'\\NP`.*'$/=a <, (/^NP`case~o(?!.*adj~true).*'$/=x <- /^NP`.*'\\NP`.*'.*$/=y <, (/^NP`.*'$/=z <, (/^NP`.*'\/NP`.*'$/=w <, (/^NP`.*'.*$/ <: 多く) <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=t <: の)))) <- /^<S`.*'\\NP`.*'>\\NP`.*'.*$/=u $-- /^S`.*'\/S`.*'$/=b
+
+relabel a /S`mod~nm,form~base,fin~f,adj~true'\\NP`case~ga,mod~nm,fin~f'/
+relabel b /S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f,adj~true'/
+relabel x /NP`case~o,mod~nm,fin~f,adj~true'/
+relabel y /NP`case~o,mod~nm,fin~f,adj~true'\\NP`case~nc,mod~nm,fin~f,adj~true'/
+relabel z /NP`case~nc,mod~nm,fin~f,adj~true'/
+relabel w /NP`case~X1,mod~X2,fin~f,adj~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel u /<S`mod~nm,form~base,fin~f,adj~true'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,adj~true'/
+relabel t /<NP`case~X1,mod~X2,fin~f,adj~true'\/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f'/
+
+/^S`.*'\/S`.*adj~true.*'$/ <- /^<S`.*'\/S`(?!.*adj~true).*'>\\NP`.*'.*$/=x
+
+relabel x /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f,adj~true'>\\NP`case~nc,mod~nm,fin~f'/
+
+% add adj pos tag (ex. 太郎は次郎より3冊多くの本を買った。)
+/^S`.*'\\NP`.*'$/=a <, (/^NP`case~o(?!.*adj~true).*'$/=x <- /^NP`.*'\\NP`.*'.*$/=y <, (/^NP`.*'$/=z <, (/^NP`.*'\/NP`.*'$/=w <, (/^NP`.*'$/ <- (/^NP`.*'.*$/ <: 多く)) <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=t <: の)))) <- /^<S`.*'\\NP`.*'>\\NP`.*'.*$/=u $-- (/^S`.*'\/S`.*'$/=b <- /^<S`.*'\/S`.*'>\\NP`.*'.*$/=c)
+
+relabel a /S`mod~nm,form~base,fin~f,adj~true'\\NP`case~ga,mod~nm,fin~f'/
+relabel b /S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f,adj~true'/
+relabel c /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f,adj~true'>\\NP`case~nc,mod~nm,fin~f';助詞;格助詞;一般;*/
+relabel x /NP`case~o,mod~nm,fin~f,adj~true'/
+relabel y /NP`case~o,mod~nm,fin~f,adj~true'\\NP`case~nc,mod~nm,fin~f,adj~true'/
+relabel z /NP`case~nc,mod~nm,fin~f,adj~true'/
+relabel w /NP`case~X1,mod~X2,fin~f,adj~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel u /<S`mod~nm,form~base,fin~f,adj~true'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,adj~true'/
+relabel t /<NP`case~X1,mod~X2,fin~f,adj~true'\/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f'/
+
+/^<S`.*'\\NP`.*'>\\NP`.*adj~true'.*$/ <, /^<S`.*form~cont.*'\\NP`.*'>\\NP`(?!.*adj~true).*'.*$/=x
+
+relabel x /<S`mod~nm,form~cont,fin~f,adj~true'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,adj~true'/
+
+/^<S`.*'\\NP`.*'>\\NP`.*adj~true'.*$/ <, /^<S`.*form~stem.*'\\NP`.*'>\\NP`(?!.*adj~true).*'.*$/=x
+
+relabel x /<S`mod~nm,form~stem,fin~f,adj~true'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,adj~true'/
+
+/^S`(?!.*adj~true).*'\\S`.*'.*$/=x $-- /^<S`.*'\\NP`.*'>\\NP`.*adj~true.*'$/
+
+relabel x /S`mod~nm,form~base,fin~f,adj~true'\\S`mod~nm,form~cont,fin~f,adj~true'/
+
+% add mul pos tag (ex. 太郎は次郎の2倍の本を買った。)
+/^NP`(?!.*mul~true).*'$/=x <, (/^NP`.*'\/NP`.*'$/=y <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=z <: の)) <- (/^NP`.*'$/ <, /^NP`.*';名詞;数.*$/ <- (/.*/ <: 倍))
+
+relabel x /NP`case~nc,mod~nm,fin~f,mul~true'/
+relabel y /NP`case~X1,mod~X2,fin~f,mul~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel z /<NP`case~X1,mod~X2,fin~f,mul~true'\/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f'/
+
+/^NP`(?!.*mul~true).*'\/NP`.*'$/=x <, /^NP`.*mul~true.*'$/ <- /^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=y
+
+relabel x /NP`case~X1,mod~X2,fin~f,mul~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel y /<NP`case~X1,mod~X2,fin~f,mul~true'\/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f,mul~true'/
+
+/^NP`(?!.*mul~true).*'$/=x <, /^NP`.*mul~true'\/NP`.*'$/
+
+relabel x /NP`case~nc,mod~nm,fin~f,mul~true'/
+
+/^NP`(?!.*mul~true).*'$/=x <, /^NP`.*mul~true'$/ <- (/^NP`.*'\\NP`.*'.*$/=y <: を)
+
+relabel x /NP`case~o,mod~nm,fin~f,mul~true'/
+relabel y /NP`case~o,mod~nm,fin~f,mul~true'\\NP`case~nc,mod~nm,fin~f,mul~true'/
+
+/^<S`.*'\\NP`.*'>\\NP`(?!.*mul~true).*'.*$/=x $-- /^NP`.*mul~true.*'$/
+
+relabel x /<S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,mul~true'/
+
+/^<S`.*'\\NP`.*'>\\NP`.*mul~true'.*$/ <, /^<S`.*form~cont.*'\\NP`.*'>\\NP`(?!.*mul~true).*'.*$/=x
+
+relabel x /<S`mod~nm,form~cont,fin~f'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,mul~true'/
+
+/^<S`.*'\\NP`.*'>\\NP`.*mul~true'.*$/ <, /^<S`.*form~stem.*'\\NP`.*'>\\NP`(?!.*mul~true).*'.*$/=x
+
+relabel x /<S`mod~nm,form~stem,fin~f'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,mul~true'/
+
+% より + も -> よりも (S/S)\NP
+/^NP`.*'$/=x <- (/^NP`.*'\\NP`.*'.*$/=y <: より) $++ (/^<S`.*'\/S`.*'>\\NP`.*'.*$/=z <: /も/=w)
+
+delete y
+excise x x
+relabel z /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f';助詞;格助詞;一般;*/
+relabel w /よりも/
+
+% より + も -> よりも (NP/NP)\S
+/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=x <: も=w $-- (/^NP`.*'$/=y <- (/^NP`.*'\\S`.*'.*$/=z <: より))
+
+delete z
+excise y y
+relabel x /<NP`case~X1,mod~X2,fin~f'\/NP`case~X1,mod~X2,fin~f'>\\S`mod~nm,form~base,fin~f';*;*;*;*/
+relabel w よりも
+
+% より + も -> よりも (NP/NP)\NP
+/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=x <: も=w $-- (/^NP`.*'$/=y <- (/^NP`.*'\\NP`.*'.*$/=z <: より))
+
+delete z
+excise y y
+relabel x /<NP`case~X1,mod~X2,fin~f'\/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f';*;*;*;*/
+relabel w よりも
+
+% 以上 + に -> 以上に
+/^NP`.*'$/=x <, /^NP`.*'\/NP`.*'.*$/=u <- (/^NP`.*'.*$/=y <: 以上) $++ (/^<S`.*'\/S`.*'>\\NP`.*'.*$/=z <: /に/=w)
+
+delete y
+excise u u
+relabel z /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f';助詞;格助詞;一般;*/
+relabel w /以上に/
+
+% に比べると
+(/^S`.*'\/S`.*'.*$/=x <: に比べると) $-- /^S`.*'\/S`.*';名詞;固有名詞;人名;名$/=y
+
+relabel x /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f'/
+relabel y /NP`case~nc,mod~nm,fin~f';名詞;固有名詞;人名;名/
+
+% と + 同じ -> と同じ
+/^NP`.*'\/NP`.*'$/=x $++ (/^NP`.*'\/NP`.*'.*$/=y <: 同じ) <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=z <: と)
+
+delete z
+excise x x
+replace y (<NP`case~X1,mod~X2,fin~f'/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f';*;*;*;* と同じ)
+
+% と + 同じ + くらい + の -> と同じくらいの
+/^NP`.*'\/NP`.*'$/=x <, (/^NP`.*'.*$/ <: くらい) <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/ <: の) $-- (/^NP`.*'\/NP`.*'$/=y <- (/^NP`.*'\/NP`.*'.*$/=z <: 同じ) <, (/^NP`.*'\/NP`.*'$/=u <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=w <: と)))
+
+delete w
+excise u u
+replace x (<NP`case~X1,mod~X2,fin~f'/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f';*;*;*;* と同じくらいの)
+delete z
+excise y y
+
+% と + 少なくとも + 同じ + くらい + の -> と同じくらいの
+/^NP`.*'\/NP`.*'$/=x <, (/^NP`.*'.*$/ <: くらい) <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/ <: の) $-- (/^NP`.*'\/NP`.*'$/=y <- (/^NP`.*'\/NP`.*'$/=z <, (/^NP`.*'\/NP`.*'.*$/ <: 少なくとも) <- (/^NP`.*'\/NP`.*'.*$/ <: 同じ)) <, (/^NP`.*'\/NP`.*'$/=u <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=w <: と)))
+
+delete w
+excise u u
+replace x (<NP`case~X1,mod~X2,fin~f'/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f';*;*;*;* と少なくとも同じくらいの)
+delete z
+excise y y
+
+% insert dgr base
+/^S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f';形容詞.*$/=x !$-- (/^S`.*'\/S`.*'$/ <: dgr) !$-- (/^S`.*'\/S`.*'$/ <, /^S`.*'\/S`.*';名詞;数.*$/) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: 以上に))
+
+adjoinF (S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f' (S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f' dgr) @) x
+
+% insert dgr base nominal adjective
+(/^S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f'$/=x <, /^S`.*'\\NP`.*'.*形容動詞語幹.*$/) !$-- (/^S`.*'\/S`.*'$/ <: dgr) !$-- (/^S`.*'\/S`.*'$/ <, /^S`.*'\/S`.*';名詞;数.*$/) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: 以上に))
+
+adjoinF (S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f' (S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f' dgr) @) x
+
+% insert cmp base
+/^S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f'.*$/=x <- /^S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f';形容詞.*$/ !$-- (/^S`.*'\/S`.*'$/ <: cmp) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: より)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: よりも)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: に比べると)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: 以上に)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\S`.*'.*$/ <: くらい)) !<, (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: 以上に))
+
+adjoinF (S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f' (S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f' cmp) @) x
+
+% insert cmp base nominal adjective
+(/^S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f'$/=x <, /^S`.*'\\NP`.*'.*形容動詞語幹.*$/) <- /^S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f';形容詞.*$/ !$-- (/^S`.*'\/S`.*'$/ <: cmp) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: より)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: よりも)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: 以上に)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\S`.*'.*$/ <: くらい)) !<, (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: 以上に))
+
+adjoinF (S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f' (S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f' cmp) @) x
+
+% insert dgr stem
+/^S`mod~nm,form~stem,fin~f'\\NP`case~ga,mod~nm,fin~f';形容詞.*$/=x !$-- (/^S`.*'\/S`.*'$/ <: dgr) !$-- (/^S`.*'\/S`.*'$/ <, /^S`.*'\/S`.*';名詞;数.*$/)
+
+adjoinF (S`mod~nm,form~stem,fin~f'\\NP`case~ga,mod~nm,fin~f' (S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f' dgr) @) x
+
+% insert cmp stem
+/^S`mod~nm,form~stem,fin~f'\\NP`case~ga,mod~nm,fin~f'.*$/=x <- /^S`mod~nm,form~stem,fin~f'\\NP`case~ga,mod~nm,fin~f';形容詞.*$/ !$-- (/^S`.*'\/S`.*'$/ <: cmp) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: より)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: よりも)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\NP`.*'.*$/ <: 以上に)) !$-- (/^S`.*'\/S`.*'$/ <- (/^<S`.*'\/S`.*'>\\S`.*'.*$/ <: くらい))
+
+adjoinF (S`mod~nm,form~stem,fin~f'\\NP`case~ga,mod~nm,fin~f' (S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f' cmp) @) x
+
+% insert deg pos tag
+/^<S`.*'\/S`.*'>\\NP`(?!.*deg~true).*'.*$/=x <: より $-- (/^NP`.*'.*$/=y <, /^NP`.*'\/NP`.*';名詞;数.*$/)
+
+relabel x /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f,deg~true';助詞;格助詞;一般;/
+relabel y /NP`case~nc,mod~nm,fin~f,deg~true'/
+
+/^<S`.*'\/S`.*'>\\NP`(?!.*deg~true).*'.*$/=x <: よりも $-- (/^NP`.*'.*$/=y <, /^NP`.*'\/NP`.*';名詞;数.*$/)
+
+relabel x /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f,deg~true';助詞;格助詞;一般;/
+relabel y /NP`case~nc,mod~nm,fin~f,deg~true'/
+
+%insert eq pos tag
+/^NP`(?!.*eq~true).*'\/NP`.*'.*$/=x <: 同じ
+
+relabel x /NP`case~X1,mod~X2,fin~f,eq~true'\/NP`case~X1,mod~X2,fin~f'/
+
+/^NP`(?!.*eq~true).*'\/NP`.*'$/=x <, (/^NP`(?!.*eq~true).*'\/NP`.*'.*$/=y <: 少なくとも) <- (/^NP`.*'\/NP`.*'.*$/ <: 同じ)
+
+relabel x /NP`case~X1,mod~X2,fin~f,eq~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel y /NP`case~X1,mod~X2,fin~f,eq~true'\/NP`case~X1,mod~X2,fin~f,eq~true'/
+
+/^NP`(?!.*eq~true).*'\/NP`.*'$/=x $++ /^NP`.*eq~true.*'\/NP`.*'$/
+
+relabel x /NP`case~X1,mod~X2,fin~f,eq~true'\/NP`case~X1,mod~X2,fin~f,eq~true'/
+
+/^NP`.*'\/NP`.*eq~true.*'$/ <- /^<NP`.*'\/NP`(?!.*eq~true).*'>\\NP`.*'.*$/=x
+
+relabel x /<NP`case~X1,mod~X2,fin~f,eq~true\/NP`case~X1,mod~X2,fin~f,eq~true'>\\NP`case~nc,mod~nm,fin~f'/
+
+/^NP`(?!.*eq~true).*'\/NP`.*'$/=x <, (/^NP`(?!.*eq~true).*'\/NP`.*'$/=y <, /^NP`.*eq~true.*'\/NP`.*'$/)
+
+relabel x /NP`case~X1,mod~X2,fin~f,eq~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel y /NP`case~X1,mod~X2,fin~f,eq~true'\/NP`case~X1,mod~X2,fin~f'/
+
+/^NP`(?!.*eq~true).*'$/=x <, /^NP`.*eq~true.*'\/NP`.*'$/
+
+relabel x /NP`case~nc,mod~nm,fin~f,eq~true'/
+
+/^S`(?!.*eq~true).*'\\NP`.*'.*$/=x $-- /^NP`.*eq~true.*'$/
+
+relabel x /S`mod~nm,form~base,fin~f,eq~true'\\NP`case~nc,mod~nm,fin~f,eq~true'/
+
+/^S`(?!.*eq~true).*'$/=x <- /^S`.*eq~true.*'\\NP`.*'.*$/
+
+relabel x /S`mod~nm,form~base,fin~f,eq~true'/
+
+/^S`.*'\/S`(?!.*eq~true).*'$/=x $++ /^S`.*eq~true.*'$/
+
+relabel x /S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f,eq~true'/
+
+/^S`.*'\/S`.*eq~true.*'$/ <- /^<S`.*'\/S`(?!.*eq~true).*'>\\NP`.*'.*$/=x
+
+relabel x /<S`mod~X1,form~X2,fin~f'\/S`mod~X1,form~X2,fin~f,eq~true'>\\NP`case~nc,mod~nm,fin~f'/
+
+% modify verb category in comparative clause (ex. ITELが獲得したより)
+/^<NP`.*'\/NP`.*'>\\S`.*'.*$/=x (<: より | <: よりも) $-- (/^S`.*'$/=y <- /^S`.*'\\NP`.*'.*$/=z)
+
+relabel x /<NP`case~X1,mod~X2,fin~f'\/NP`case~X1,mod~X2,fin~f'>\\<S`mod~nm,form~base,fin~f'\\NP`case~o,mod~nm,fin~f'>;助詞;格助詞;一般;*/
+relabel y /S`mod~nm,form~base,fin~f'\\NP`case~o,mod~nm,fin~f'/
+relabel z /<S`mod~nm,form~base,fin~f'\\NP`case~o,mod~nm,fin~f'>\\NP`case~ga,mod~nm,fin~f'/
+
+/^NP`.*'.*$/ <: の $-- (/^NP`.*'\/NP`.*'$/ <: (/^S`.*mod~adn.*'$/=x <- /^S`.*'\\NP`.*'.*$/=y))
+
+relabel x /S`mod~adn,form~base,fin~f'\\NP`case~o,mod~nm,fin~f'/
+relabel y /<S`mod~adn,form~base,fin~f'\\NP`case~o,mod~nm,fin~f'>\\NP`case~ga,mod~nm,fin~f'/
+
+/^<S`.*form~base.*'\\NP`.*case~o.*'>\\NP`.*case~ga.*'$/ <, /^S`.*form~cont.*'\\NP`.*'.*$/=x
+
+relabel x /<S`mod~nm,form~cont,fin~f'\\NP`case~o,mod~nm,fin~f'>\\NP`case~ga,mod~nm,fin~f'/
+
+/^<S`.*form~cont.*'\\NP`.*case~o.*'>\\NP`.*case~ga.*'$/ <, /^S`.*form~stem.*'\\NP`.*'.*$/=x
+
+relabel x /<S`mod~nm,form~stem,fin~f'\\NP`case~o,mod~nm,fin~f'>\\NP`case~ga,mod~nm,fin~f'/
+
+
+% 多く + の -> 多くの (NP/NP)/(NP/NP)
+/^NP`.*'$/=x <- (/^NP`.*'.*$/=y <: 多く) $++ (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=z <: の=w)
+
+delete y
+excise x x
+relabel z /<NP`case~X1,mod~X2,fin~f'\/NP`case~X1,mod~X2,fin~f'>\\<NP`case~X1,mod~X2,fin~f'\/NP`case~X1,mod~X2,fin~f'>;*;*;*;*/
+relabel w 多くの
+
+% add phrasal tag (ex. ITELはAPCOMより多くの注文を獲得した。)
+/^NP`(?!.*phrasal~true).*'\/NP`.*'$/=x <, (/^NP`.*'.*$/ !<- (/^NP`.*'.*$/)) <- (/^<NP`.*'\/NP`.*'>\\NP`.*'.*$/=y (<: より | <: よりも))
+
+relabel x /NP`case~X1,mod~X2,fin~f,phrasal~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel y /<NP`case~X1,mod~X2,fin~f,phrasal~true'\/NP`case~X1,mod~X2,fin~f'>\\NP`case~nc,mod~nm,fin~f';*;*;*;*/
+
+/^NP`(?!.*phrasal~true).*'\/NP`.*'$/=x <, /^NP`.*phrasal~true.*'\/NP`.*'$/ <- /^<NP`.*'\/NP`.*'>\\<NP`.*'\/NP`.*'>.*$/=y
+
+relabel x /NP`case~X1,mod~X2,fin~f,phrasal~true'\/NP`case~X1,mod~X2,fin~f'/
+relabel y /<NP`case~X1,mod~X2,fin~f,phrasal~true'\/NP`case~X1,mod~X2,fin~f'>\\<NP`case~X1,mod~X2,fin~f,phrasal~true'\/NP`case~X1,mod~X2,fin~f'>/
+
+/^NP`(?!.*phrasal~true).*'$/=x <, (/^NP`.*'$/=y <, /^NP`.*phrasal~true.*'\/NP`.*'$/) <- /^NP`.*'\\NP`.*'.*$/=z
+
+relabel x /NP`case~o,mod~nm,fin~f,phrasal~true'/
+relabel y /NP`case~nc,mod~nm,fin~f,phrasal~true'/
+relabel z /NP`case~o,mod~nm,fin~f,phrasal~true'\\NP`case~nc,mod~nm,fin~f,phrasal~true';*;*;*;*/
+
+/^<S`.*form~base.*'\\NP`.*'>\\NP`(?!.*phrasal~true).*'.*$/=x $-- /^NP`.*phrasal~true.*'$/
+
+relabel x /<S`mod~nm,form~base,fin~f'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,phrasal~true'/
+
+/^<S`.*form~base.*'\\NP`.*'>\\NP`.*phrasal~true.*'.*$/ <, /^<S`.*form~cont.*'\\NP`.*'>\\NP`(?!.*phrasal~true).*'.*$/=x
+
+relabel x /<S`mod~nm,form~cont,fin~f'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,phrasal~true'/
+
+/^<S`.*form~cont.*'\\NP`.*'>\\NP`.*phrasal~true.*'.*$/ <, /^<S`.*form~stem.*'\\NP`.*'>\\NP`(?!.*phrasal~true).*'.*$/=x
+
+relabel x /<S`mod~nm,form~stem,fin~f'\\NP`case~ga,mod~nm,fin~f'>\\NP`case~o,mod~nm,fin~f,phrasal~true'/
