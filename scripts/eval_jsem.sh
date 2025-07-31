@@ -14,7 +14,7 @@ for problem in `ls $jsem_dir/*.txt`
 do
     problem_basename=`basename $problem | sed 's/\..*//'`
     ((num_problem++))
-    scripts/rte_v2.sh $problem $semantic_templates
+    scripts/rte.sh $problem $semantic_templates
     gold_answer=`cat $jsem_dir/$problem_basename.answer`
     system_answer=`cat $result_dir/$problem_basename.answer`
     echo "system answer is "$system_answer

@@ -19,6 +19,6 @@ for d in data:
         for premise in d["premises"]:
             f.write(premise + "\n")
         f.write(d["hypothesis"] + "\n")
-    cmd = f"scripts/rte_v2.sh cache/{id}.txt {ARGS.sem_file}"
+    cmd = f"scripts/rte.sh cache/{id}.txt {ARGS.sem_file}"
     os.system(cmd)
     os.remove(f"cache/{id}.txt")

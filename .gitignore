@@ -9,10 +9,12 @@
 /dict
 /baseline
 /baseline_results
-/jsem_plain
 /jsem_templates
 /baseline_new
 /en_results
+/data
+/scripts/eval_newdata.sh
+/scripts/eval_newdata.py
 
 # temp files
 /eval.py

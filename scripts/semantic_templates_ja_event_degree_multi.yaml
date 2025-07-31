@@ -15,19 +15,18 @@
 # K,K1,K2      (Ev -> Prop) -> Ev -> Prop (= Vmod)
 # Q,Q1,Q2      Nmod -> (E -> Prop) -> Prop (= NP*)
 # C1,C2,C3     Entity -> Event -> (Event -> Entity) -> Prop (= Role)
-# S,S1,S2      Role -> Role -> Vmod -> Prop (= S*)
-# V1           (Nmod -> (E -> Prop) -> Prop) -> Role -> Role -> Vmod -> Prop (= NP* -> S*)
-# V2           (Nmod -> (E -> Prop) -> Prop) -> (Nmod -> (E -> Prop) -> Prop) -> Role -> Role -> Vmod -> Prop (= NP* -> NP* -> S*)
+# S,S1,S2      Role -> Role -> Role -> Vmod -> Prop (= S*)
+# V1           (Nmod -> (E -> Prop) -> Prop) -> Role -> Role -> Role -> Vmod -> Prop (= NP* -> S*)
+# V2           (Nmod -> (E -> Prop) -> Prop) -> (Nmod -> (E -> Prop) -> Prop) -> Role -> Role -> Role -> Vmod -> Prop (= NP* -> NP* -> S*)
 # E            expression (surface form)
-# H            (E -> D -> Prop) -> D -> Prop
-# H1           (E -> D -> Prop) -> Prop
-# F3           D -> D
-# A11, A12     ((E -> D -> Prop) -> D -> Prop) -> Prop (= Op1)
-# A2           (D -> D) -> ((E -> D -> Prop) -> D -> Prop) -> Prop (= Op2)
-# I            Op1 -> Op2 -> Prop
-# I1           Op1 -> Prop
-# S3           (Op1 -> Op2 -> E -> Prop) -> Role -> Role -> Vmod -> Prop (= (Op1 -> Op2 -> Prop) -> S* = S**)
-# B            E -> E -> ((E -> D -> Prop) -> D -> Prop) -> Prop
+# A(Adjective) E -> D -> Prop
+# F31 F32      D -> D
+# F4           Prop -> Prop
+# N3           (E -> D -> Prop) -> (D -> D) -> E -> Prop (= Ainfo)
+# S3           Ainfo -> S* (= S**)
+#              Ainfo -> NP* (= NP**)
+#              (Ainfo -> E -> Prop) -> (E -> Prop) -> Prop (= NP***)
+# M            NP* -> NP**
 
 # Constant          Type
 # Nom,Acc,Dat,Attr  Event -> Entity
@@ -44,10 +43,24 @@
 # S/S         \S C1 C2 C3 K. S(C1,C2,C3,\J e.K(E(J),e)) : S* -> S* (intensional modification)
 # NP/NP       \Q N F. Q(\G x. N(\y.(E(y) & G(y)),x), F) : NP* -> NP* (extensional modification)
 # NP/NP       \Q N F. Q(\G x. N(E(G),x), F) : NP* -> NP* (intensional modification)
-# S\NP[adj]   \Q I C1 C2 C3 K. Q(\F x.True, I(\H x. exists d. (E(x, d) & H(E, d)), \F3 H x. forall d. (E(x, F3(d)) | H(E, d)))) : NP* -> S**
-# (S/S)\NP(より) \Q S3 C1 C2 C3 K. Q(\F x.True, \x. S3(\A1. A1(\H d. -H(x, d)), C1, C2, C3, K)) : NP* -> S** -> S*
-# S/S(dgr)    \S3 I1 C1 C2 C3 K. S3(\A1 A2. I1(A1), C1, C2, C3, K) : S** -> S*** (S*** = (Op1 -> Prop) -> S*)
-# S/S(cmp)    \S3 C1 C2 C3 K. S3(\A1. A1(\H d. (d = _th)), C1, C2, C3, K) : S*** -> S*
+# S\NP [形容詞]
+#             \Q N3 C1 C2 C3 K. Q(\I.I, \x. N3(E, \d. d, \d. d, \t. t, x))
+#               : NP* -> S**
+# NP/NP [形容詞]
+#             \Q N3 N F. Q(\G x. N(\y. (G(y) & N3(Adjective, \d. d, y)), x), F)
+#               : NP* -> NP**
+# (S/S)\NP [より]
+#             \Q S3 C1 C2 C3 K. S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & -A(y, d))), C1, C2, C3, K)
+#               : NP* -> S** -> S*
+# ((NP/NP)/(NP/NP))\(S/NP) [より]
+#             \Q S3 C1 C2 C3 K. S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & $less(F3(y), F3(d)))), C1, C2, C3, K)
+#               : (NP* -> S*) -> (NP* -> NP**) -> NP* -> NP*
+# ((NP/NP)/(NP/NP))\NP [より]
+#             \V1 M Q N F. V1(\G1 G2. exists d. (M(Q, \A F31 F32 F4 x. (A(x, d) & F(x)), N, F) & -M(Q, \A F31 F32 F4 x. (A(x, d) & G2(x)), N, \x.True)), \x e T. (T(e) = x), \x e T. (T(e) = x), \x e T. (T(e) = x), \I.I)
+#               : NP* -> (NP* -> NP**) -> NP* -> NP*
+# (NP/NP)\NP [と同じ]
+#             \Q1 Q2 N F. Q2(\A z. N(\y. Q1(\I.I, \x. forall d. (A(x, d) <-> A(y, d))), z), F)
+#               : NP* -> NP*** -> NP*
 
 ##### Unary lexical rules #####
 
@@ -55,7 +68,20 @@
 - category: NP/NP
   rule: ADNint
   child0_category: S\NP
-  semantics: \V1 Q N F. Q(\G.N(\y.(G(y) & V1(\G1 G2.G2(y), \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I))), F)
+  semantics: \V1 Q N F P. P(Q(\G.N(\y.(G(y) & V1(\G1 G2 P.G2(y), \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I, \f s.f))), F, \f s.f), Q(\G.N(\y.(G(y) & V1(\G1 G2 P.G2(y), \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I, \f s.s))), F, \f s.s))
+
+- category: NP/NP
+  rule: ADNint
+  child0_category: S\NP
+  child0_pos: 形容詞
+  # semantics: \V1 Q N3 N F. Q(\G.N(\y.(G(y) & V1(\G1 G2.G2(y), N3, \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I))), F)
+  semantics: \V1 Q N3 N F P. P(Q(\G.N(\y.(G(y) & V1(\G1 G2 P.G2(y), N3, \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I, \f s.f))), F, \f s.f), Q(\G.N(\y.(G(y) & V1(\G1 G2 P.G2(y), N3, \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I, \f s.s))), F, \f s.f))
+
+- category: NP/NP
+  rule: ADNint
+  child0_category: S\NP
+  child0_child0_pos1: 形容動詞語幹
+  semantics: \V1 Q N3 N F P. P(Q(\G.N(\y.(G(y) & V1(\G1 G2 P.G2(y), N3, \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I, \f s.f))), F, \f s.f), Q(\G.N(\y.(G(y) & V1(\G1 G2 P.G2(y), N3, \x e T.(T(e) = x), \x e T.(T(e) = x), \x e T.(T(e) = x), \I.I, \f s.s))), F, \f s.f))
 
 # S ==> NP/NP
 - category: NP/NP
@@ -97,7 +123,7 @@
 
 - category: NP/NP
   rule: <
-  semantics: \L R Q N F. forall x.(Q(\G.N(\y.(G(y) & (x = y))), \y.True) -> F(x))
+  semantics: \L R Q N F P. P(forall x.(Q(\G.N(\y.(G(y) & (x = y))), \y.True, \f s.f) -> F(x)), Q(\F x.True, \x.True, \f s.s))
   child0_surf: すべて
   child1_surf: の
 
@@ -308,12 +334,12 @@
   child1_any_pos2: 助数詞
   child1_any_base: だ
 
-- category: S\NP
-  rule: <B1
-  semantics: \V1 R Q1 C1 C2 C3 K. -Q1(\I.I, \x.V1(\F1 F2.F2(x),C1,C2,C3,K)) # wide scope
-  # semantics: \V1 R Q1 C1 C2 C3 K. Q1(\I.I, \x.-V1(\F1 F2.F2(x),C1,C2,C3,K)) # narrow scope
-  child0_category: S\NP
-  child1_base: ない
+# - category: S\NP
+#   rule: <B1
+#   semantics: \V1 R Q1 C1 C2 C3 K. -Q1(\I.I, \x.V1(\F1 F2.F2(x),C1,C2,C3,K)) # wide scope
+#   # semantics: \V1 R Q1 C1 C2 C3 K. Q1(\I.I, \x.-V1(\F1 F2.F2(x),C1,C2,C3,K)) # narrow scope
+#   child0_category: S\NP
+#   child1_base: ない
 
 - category: (S\NP)\NP
   rule: <B2
@@ -345,7 +371,7 @@
 
 # Templates for NPs
 - category: NP
-  semantics: \E N F. exists x.(N(E,x) & F(x))
+  semantics: \E N F P. P(exists x.(N(E,x) & F(x)), True)
   coq_type: Entity -> Prop
 
 # Templates for NP modifiers
@@ -389,12 +415,17 @@
   semantics: \E Q C1 C2 C3 K. Q(\I.I, \x.exists e.(K(E,e) & C1(x,e,Nom)))
   coq_type: Event -> Prop
 
+- category: S\NP
+  semantics: \E Q C1 C2 C3 K P. P(-Q(\I.I, \x.exists e.(K(\w.True,e) & C1(x,e,Nom)), \f s.f), Q(\I.I, \x.True, \f s.s))
+  coq_type: Event -> Prop
+  surf: ではない
+
 - category: S\NP[case=ga]
   semantics: \E Q C1 C2 C3 K. Q(\I.I, \x.exists e.(K(E,e) & C1(x,e,Nom)))
   coq_type: Event -> Prop
 
 - category: S\NP[case=o]
-  semantics: \E Q C1 C2 C3 K. Q(\I.I, \x.exists e.(K(E,e) & C1(x,e,Acc)))
+  semantics: \E Q C1 C2 C3 K P. P(Q(\I.I, \x.exists e.(K(E,e) & C1(x,e,Acc)), \f s.f), Q(\I.I, \x.True, \f s.s))
   coq_type: Event -> Prop
 
 - category: S\NP[case=ni]
@@ -410,7 +441,7 @@
   coq_type: Event -> Prop
 
 - category: (S\NP[case=ga])\NP[case=o]
-  semantics: \E Q2 Q1 C1 C2 C3 K. Q1(\I.I, \x1.Q2(\I.I, \x2.exists e.(K(E,e) & C1(x1,e,Nom) & C2(x2,e,Acc))))
+  semantics: \E Q2 Q1 C1 C2 C3 K P. P(Q1(\I.I, \x1.Q2(\I.I, \x2.exists e.(K(E,e) & C1(x1,e,Nom) & C2(x2,e,Acc)), \f s.f), \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\I.I, \x.True, \f s.s)))
   coq_type: Event -> Prop
 
 - category: (S\NP[case=ga])\NP[case=ni]
@@ -418,7 +449,7 @@
   coq_type: Event -> Prop
 
 - category: (S\NP[case=o])\NP[case=ga]
-  semantics: \E Q1 Q2 C1 C2 C3 K. Q1(\I.I, \x1.Q2(\I.I, \x2.exists e.(K(E,e) & C1(x1,e,Nom) & C2(x2,e,Acc))))
+  semantics: \E Q1 Q2 C1 C2 C3 K P. P(Q1(\I.I, \x1.Q2(\I.I, \x2.exists e.(K(E,e) & C1(x1,e,Nom) & C2(x2,e,Acc)), \f s.f), \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
   coq_type: Event -> Prop
 
 - category: (S\NP[case=ni])\NP[case=ga]
@@ -453,7 +484,10 @@
   semantics: \E Q3 Q I1 C1 C2 C3 K. Q(\I.I, Q3(I1, \I.I, \x y. exists e. (K(E, e) & C1(x, e, Nom) & C2(y, e, Acc))))
 
 - category: (S\NP[case=ga])\NP[case=o,mul=true]
-  semantics: \E Q1 Q2 C1 C2 C3 K. Q2(\I.I, Q1(\I.I, \x y. exists e. (K(E, e) & C1(x, e, Nom) & C2(y, e, Acc))))
+  semantics: \E Q1 Q2 C1 C2 C3 K P. P(Q2(\I.I, \z. Q1(\I.I, \x y. exists e. (K(E, e) & C1(x, e, Nom) & C2(y, e, Acc)), z, \f s.f), \f s.f), (Q1(\F x.True, \x.True, _dummy, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
+
+- category: (S\NP[case=ga])\NP[case=o,phrasal=true]
+  semantics: \E Q1 Q2 C1 C2 C3 K P. P(Q2(\I.I, \x. Q1(\I.I, \x y. exists e. (K(E, e) & C1(x, e, Nom) & C2(y, e, Acc)), x, \f s.f), \f s.f), (Q1(\F x.True, \x.True, _dummy, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
 
 
 # Templates for particles
@@ -471,7 +505,7 @@
 
 # Lexical entries for NPs
 - category: NP
-  semantics: \E N F. (N(\x.True,E) & F(E))
+  semantics: \E N F P. P((N(\x.True,E) & F(E)), True)
   coq_type: Entity
   pos1: 固有名詞
 
@@ -500,8 +534,32 @@
   base: こと
 
 - category: NP
-  semantics: \E N F. exists x. (N(E,x) & F(x))
+  semantics: \E N F P. P(exists x. (N(\x.True, x) & F(x)), True)
   base: の
+
+- category: NP
+  semantics: \E N F P. P(exists x. (N(\x.True, x) & F(x)), True)
+  base: 件数
+
+- category: NP
+  semantics: \E N F P. P(exists x. (N(\x.True, x) & F(x)), True)
+  base: 個数
+
+- category: NP
+  semantics: \E N F P. P(exists x. (N(\x.True, x) & F(x)), True)
+  base: 冊数
+
+- category: NP
+  semantics: \E N F P. P(exists x. (N(\x.True, x) & F(x)), True)
+  base: 枚数
+
+- category: NP
+  semantics: \E N F P. P(exists x. (N(\x.True, x) & F(x)), True)
+  base: 曲数
+
+- category: NP
+  semantics: \E N F P. P(exists x. (N(\x.True, x) & F(x)), True)
+  base: 本数
 
 - category: NP
   semantics: \E N F. exists x. (N(_人,x) & F(x))
@@ -521,15 +579,11 @@
 
 # Lexical entries for NP modifiers
 - category: (NP/NP)\NP
-  semantics: \E Q1 Q2 N F. Q2(\G z. N(\y.(Q1(\I.I, \x.(y = x)) & G(y)), z), F)
-  base: の
-
-- category: (NP/NP)\NP
-  semantics: \E Q1 Q2 N F. Q2(\G z. N(\y.(Q1(\I.I, \x.have(x, y)) & G(y)), z), F)
+  semantics: \E Q1 Q2 N F P. P(Q2(\G z. N(\y.(Q1(\I.I, \x.have(x, y), \f s.f) & G(y)), z), F, \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
   base: の
 
 - category: NP[mul=true]/NP
-  semantics: \L R Q1 Q2 N G3 x. forall d. (Q2(\G. N(\y. (G(y) & Q1(\G z. many(y, $product(z, d)), \x.True) & G3(x, y))), \x.True) | -Q2(\G. N(\z. (G(z) & many(z, d) & L(\G z1. G3(z1, z), \x.True))), \x.True))
+  semantics: \L R Q1 Q2 N G3 x P. P(forall d. (Q2(\G. N(\y. (G(y) & Q1(\G z. many(y, $product(z, d)), \x.True, \f s.f) & G3(x, y))), \x.True, \f s.f) | -Q2(\G. N(\z. (G(z) & many(z, d) & L(\G z1. G3(z1, z), \x.True, \f s.f))), \x.True, \f s.f)), Q1(\F x.True, \x.True, \f s.s))
   child1_base: の
 
 - category: NP[mul=true]/NP
@@ -628,11 +682,7 @@
   base: 各
 
 - category: NP/NP
-  semantics: \E Q N F. Q(N,F)
-  base: どの
-
-- category: NP/NP
-  semantics: \E Q N F. forall x.(Q(\G.N(\y.(G(y) & (x = y))), \y.True) -> F(x))
+  semantics: \E Q N F P. P(forall x.(Q(\G.N(\y.(G(y) & (x = y))), \y.True, \f s.f) -> F(x)), Q(\F x.True, \x.True, \f s.s))
   base: どの
 
 - category: NP/NP
@@ -640,7 +690,7 @@
   base: みな
 
 - category: (NP/NP)\NP
-  semantics: \E Q1 Q2 N F. (Q1(N,F) | Q2(N,F))
+  semantics: \E Q1 Q2 N F P. P((Q1(N,F,\f s.f) | Q2(N,F,\f s.f)), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
   base: か
 
 - category: (S/S)\NP
@@ -664,15 +714,11 @@
   base: か
 
 - category: (NP/NP)\NP
-  semantics: \E Q1 Q2 N F. (Q1(N,F) & Q2(N,F))
-  base: と
-
-- category: (NP/NP[eq=true])\NP
-  semantics: \E Q1 Q4 x N F. Q1(N, \y. Q4(y, x, N, F))
+  semantics: \E Q1 Q2 N F P. P((Q1(N,F,\f s.f) & Q2(N,F,\f s.f)), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
   base: と
 
 - category: (NP/NP)\NP
-  semantics: \E Q1 Q2 N F. (Q1(N,F) & Q2(N,F))
+  semantics: \E Q1 Q2 N F P. P((Q1(N,F,\f s.f) & Q2(N,F,\f s.f)), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
   base: や
 
 - category: S/S
@@ -694,7 +740,7 @@
   base: を
 
 - category: (S/S)\NP
-  semantics: \E Q S C1 C2 C3 K. Q(\I.I, \x.S(C1,C2,C3,\J e1.K(\e2.(J(e2) & (Nom(e2) = x)),e1)))
+  semantics: \E Q S C1 C2 C3 K P. P(Q(\I.I, \x.S(C1,C2,C3,\J e1.K(\e2.(J(e2) & (Nom(e2) = x)),e1), \f s.f), \f s.f), (Q(\F x.True, \x.True, \f s.s) & S(C1,C2,C3,\J e1.K(\e2.(J(e2) & (Nom(e2) = x)),e1), \f s.s)))
   base: は
 
 - category: (S/S[eq=true])\NP
@@ -791,7 +837,7 @@
   surf: で
 
 - category: S\NP
-  semantics: \E Q C1 C2 C3 K. Q(\I.I, \x.exists e.(C1(x,e,Nom) & K(\w.True,e)))
+  semantics: \E Q C1 C2 C3 K P. P(Q(\I.I, \x.exists e.(C1(x,e,Nom) & K(\w.True,e)), \f s.f), Q(\F x.True, \x.True, \f s. s))
   base: だ
 
 - category: S[eq=true]\NP[eq=true]
@@ -807,11 +853,7 @@
   surf: だ
 
 - category: S\S
-  semantics: \E S C1 C2 C3 K. S(C1,C2,C3,\J e1.K(\e2.(J(e2) & Past(e2)),e1))
-  surf: た
-
-- category: S[adj=true]\S[adj=true]
-  semantics: \E S I1 C1 C2 C3 K. S(I1, C1, C2, C3, \J e1.K(\e2.(J(e2) & Past(e2)),e1))
+  semantics: \E S C1 C2 C3 K P. P(S(C1,C2,C3,\J e1.K(\e2.(J(e2) & Past(e2)),e1), \f s.f), S(C1,C2,C3,\J e1.K(\e2.(J(e2) & Past(e2)),e1), \f s.s))
   surf: た
 
 - category: S\S
@@ -844,8 +886,29 @@
   base: ます
 
 - category: S\S
-  semantics: \E S C1 C2 C3 K. -S(C1,C2,C3,K)
+  # semantics: \E S C1 C2 C3 K. -S(C1,C2,C3,K)
+  semantics: \E S N3 C1 C2 C3 K P. P(-S(N3, C1, C2, C3, K, \f s.f), S(N3, C1, C2, C3, K, \f s.s))
   base: ない
+
+- category: S\S
+  semantics: \E S N3 C1 C2 C3 K P. P(-S(N3, C1, C2, C3, K, \f s.f), S(N3, C1, C2, C3, K, \f s.s))
+  surf: でない
+
+- category: S\S
+  semantics: \E S N3 C1 C2 C3 K P. P(-S(N3, C1, C2, C3, K, \f s.f), S(N3, C1, C2, C3, K, \f s.s))
+  surf: というわけではない
+
+- category: S\S
+  semantics: \E S N3 C1 C2 C3 K P. P($dia(S(N3, C1, C2, C3, K, \f s.f)), S(N3, C1, C2, C3, K, \f s.s))
+  base: かもしれない
+
+- category: S\S[form=base]
+  semantics: \E S C1 C2 C3 K P. P(-S(C1, C2, C3, K, \f s.f), S(C1, C2, C3, K, \f s.s))
+  surf: というわけではない
+
+- category: S\S[form=base]
+  semantics: \E S C1 C2 C3 K P. P($dia(S(C1, C2, C3, K, \f s.f)), S(C1, C2, C3, K, \f s.s))
+  base: かもしれない
 
 - category: S\S
   semantics: \E S C1 C2 C3 K. -S(C1,C2,C3,K)
@@ -905,80 +968,146 @@
 
 # add for comparatives
 
-# - category: (S/S)\NP
-#   semantics: \E Q A C1 C2 C3 K. Q(\F x. F(x), \x. A(\H d. -H(x, d)))
-#   base: より
-
 - category: (S/S)\NP
-  semantics: \E Q S3 C1 C2 C3 K. Q(\I.I, \x. S3(\A1. A1(\H d. -H(x, d)), C1, C2, C3, K))
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & -A(y, d)), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y.True, \f s.f), C1, C2, C3, K, \f s.s)))
+  base: より
+
+- category: (S/S[measure=true])\NP
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. forall d. (A(y, d) -> A(x, F31(d))), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y.True, \f s.f), C1, C2, C3, K, \f s.s)))
   base: より
 
 - category: (S/S)\NP[deg=true]
-  semantics: \E Q S3 C1 C2 C3 K. Q(\I.I, \x. S3(\A1. A1(\H d. $less(x, d)), C1, C2, C3, K))
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & F4($less(y, d))), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y.True, \f s.f), C1, C2, C3, K, \f s.s)))
+  base: より
+
+- category: ((NP/NP)/(NP/NP))\(S\NP)
+  semantics: \E V1 M Q N F P. P(V1(\G1 G2 P. exists d. (M(Q, \A F31 F32 F4 x. A(x, d), N, F, \f s.f) & -M(Q, \A F31 F32 F4 x. (A(x, d) & G2(x)), N, \x.True, \f s.f)), \x e T. (T(e) = x), \x e T. (T(e) = x), \x e T. (T(e) = x), \I.I, \f s.f), (Q(\F x.True, \x.True, \f s.s) & V1(\G1 G2 P. M(\G1 G2 P.True, \A F31 F32 F4 x. True, N, \x.True, \f s.s), \x e T. (T(e) = x), \x e T. (T(e) = x), \x e T. (T(e) = x), \I.I, \f s.f)))
+  base: より
+
+- category: ((NP/NP)/(NP/NP))\NP
+  semantics: \E Q1 M Q2 N F P. P(exists d. (M(Q2, \A F31 F32 F4 x. (A(x, d)), N, F, \f s.f) & -M(Q2, \A F31 F32 F4 x. (A(x, d) & Q1(N, \y. (x = y), \f s.f)), N, \x.True, \f s.f)), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
+  base: より
+
+- category: ((NP[phrasal=true]/NP)/(NP/NP))\NP
+  semantics: \E Q1 M Q2 N F x P. P(Q1(N, \y. (exists d. (M(Q2, \A F31 F32 F4 z. (A(z, d) & F(x, z)), N, \x.True, \f s.f) & -M(Q2, \A F31 F32 F4 z. (A(z, d) & F(y, z)), N, \x.True, \f s.f))), \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s) & Q1(N, \y. M(\G1 G2 P.True, \A F31 F32 F4 z. True, N, \x.True, \f s.s), \f s.f)))
+  base: より
+
+- category: ((NP[phrasal=true]/NP)/(NP[measure=true]/NP))\NP
+  semantics: \E Q1 M Q2 N F x P. P(Q1(N, \y. (forall d. (M(Q2, \A F31 F32 F4 z. (A(z, d) & F(y, z)), N, \x.True, \f s.f) -> M(Q2, \A F31 F32 F4 z. (A(z, F31(d)) & F(x, z)), N, \x.True, \f s.f))), \f s. f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s) & Q1(N, \y. M(\G1 G2 P.True, \A F31 F32 F4 z. True, N, \x.True, \f s.s), \f s.f)))
   base: より
 
 - category: (S/S)\NP
-  semantics: \E Q S3 C1 C2 C3 K. Q(\I.I, \x. S3(\A1. A1(\H d. -H(x, d)), C1, C2, C3, K))
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & -A(y, d)), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y.True, \f s.f), C1, C2, C3, K, \f s.s)))
+  base: に比べると
+
+- category: (S/S)\NP
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & -A(y, d)), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y.True, \f s.f), C1, C2, C3, K, \f s.s)))
+  base: よりも
+
+- category: (S/S[measure=true])\NP
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. forall d. (A(y, d) -> A(x, F31(d))), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y.True, \f s.f), C1, C2, C3, K, \f s.s)))
   base: よりも
 
 - category: (S/S)\NP[deg=true]
-  semantics: \E Q S3 C1 C2 C3 K. Q(\I.I, \x. S3(\A1. A1(\H d. $less(x, d)), C1, C2, C3, K))
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & $less(F3(y), F3(d))), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y.True, \f s.f), C1, C2, C3, K, \f s.s)))
+  base: よりも
+
+- category: ((NP/NP)/(NP/NP))\(S\NP)
+  semantics: \E V1 M Q N F P. P(V1(\G1 G2 P. exists d. (M(Q, \A F31 F32 F4 x. A(x, d), N, F, \f s.f) & -M(Q, \A F31 F32 F4 x. (A(x, d) & G2(x)), N, \x.True, \f s.f)), \x e T. (T(e) = x), \x e T. (T(e) = x), \x e T. (T(e) = x), \I.I, \f s.f), (Q(\F x.True, \x.True, \f s.s) & V1(\G1 G2 P. M(\G1 G2 P.True, \A F31 F32 F4 x. True, N, \x.True, \f s.s), \x e T. (T(e) = x), \x e T. (T(e) = x), \x e T. (T(e) = x), \I.I, \f s.f)))
+  base: よりも
+
+- category: ((NP/NP)/(NP/NP))\NP
+  semantics: \E Q1 M Q2 N F P. P(exists d. (M(Q2, \A F31 F32 F4 x. (A(x, d)), N, F, \f s.f) & -M(Q2, \A F31 F32 F4 x. (A(x, d) & Q1(N, \y. (x = y), \f s.f)), N, \x.True, \f s.f)), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s)))
+  base: よりも
+
+- category: ((NP[phrasal=true]/NP)/(NP/NP))\NP
+  semantics: \E Q1 M Q2 N F x P. P(Q1(N, \y. (exists d. (M(Q2, \A F31 F32 F4 z. (A(z, d) & F(x, z)), N, \x.True, \f s.f) & -M(Q2, \A F31 F32 F4 z. (A(z, d) & F(y, z)), N, \x.True, \f s.f))), \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\F x.True, \x.True, \f s.s) & Q1(N, \y. M(\G1 G2 P.True, \A F31 F32 F4 z. True, N, \x.True, \f s.s), \f s.f)))
   base: よりも
 
 - category: (S/S)\NP
-  semantics: \E Q S3 C1 C2 C3 K. prod(fst(Q(\I.I, \x. S3(\A11 A12 A3. A11(\H d. -H(x, d)), C1, C2, C3, K))), snd(Q(\I.I, \x. S3(\A11 A12 A3. A3(\H. H(x, _th)), C1, C2, C3, K))))
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d. (A(x, d) & -A(y, d)), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y. A(y, _th), \f s.f), C1, C2, C3, K, \f s.s)))
   base: 以上に
 
+- category: ((NP/NP)/(NP/NP))\(S\NP)
+  semantics: \E V1 M Q N F P. P(V1(\G1 G2 P. exists d. (M(Q, \A F31 F32 F4 x. A(x, d), N, F, \f s.f) & -M(Q, \A F31 F32 F4 x. (A(x, d) & G2(x)), N, \x.True, \f s.f)), \x e T. (T(e) = x), \x e T. (T(e) = x), \x e T. (T(e) = x), \I.I, \f s.f), V1(\G1 G2 P. M(Q, \A F31 F32 F4 x. (A(x, _th) & G2(x)), N, \x.True, \f s.s), \x e T. (T(e) = x), \x e T. (T(e) = x), \x e T. (T(e) = x), \I.I, \f s.f))
+  base: 以上に
+
+- category: (NP/NP)\NP
+  semantics: \E Q1 Q2 N F. Q2(\A F3 z. N(\y. Q1(\I.I, \x. forall d. (A(x, d) <-> A(y, d))), z), F)
+  surf: と同じ
+
+- category: (NP/NP)\NP
+  semantics: \E Q1 Q2 N F P. P(Q2(\A F3 z. N(\y. Q1(\I.I, \x. exists d1 d2. (A(x, d1) & forall d3. ($less(F3(d1), F3(d3)) => -A(x, d3)) & A(y, d2) & forall d4. ($less(F3(d2), F3(d4)) => -A(y, d4)) & $less($uminus(_d0), $difference(d1, d2)) & $less($difference(d1, d2), _d0)), \f s.f), z), F, \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\A z. N(\y. Q1(\I.I, \x.True, \f s.f), z), F, \f s.s)))
+  surf: と同じくらいの
+# - category: (NP/NP)\NP
+#   semantics: \E Q1 Q2 N F P. P(Q2(\A F31 F32 F4 z. N(\y. Q1(\I.I, \x. forall d1 d2. ((-(A(x, d1) <-> A(y, d1)) & -(A(x, d2) <-> A(y, d2))) -> ($less($uminus(_d0), $difference(d1, d2)) & $less($difference(d1, d2), _d0))), \f s.f), z), F, \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\A z. N(\y. Q1(\I.I, \x.True, \f s.f), z), F, \f s.s)))
+#   surf: と同じくらいの
+
+- category: (NP/NP)\NP
+  semantics: \E Q1 Q2 N F P. P(Q2(\A F3 z. N(\y. Q1(\I.I, \x. forall d. (A(x, d) -> A(y, d)), \f s.f), z), F, \f s.f), (Q1(\F x.True, \x.True, \f s.s) & Q2(\A z. N(\y. Q1(\I.I, \x.True, \f s.f), z), F, \f s.s)))
+  surf: と少なくとも同じくらいの
+
 - category: (S/S)\NP
-  semantics: 
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d1 d2. (A(x, d1) & forall d3. ($less(F32(d1), F32(d3)) => -A(x, d3)) & A(y, d2) & forall d4. ($less(F32(d2), F32(d4)) => -A(y, d4)) & $less($uminus(_d0), $difference(d1, d2)) & $less($difference(d1, d2), _d0)), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y. A(y, _th), \f s.f), C1, C2, C3, K, \f s.s)))
   base: と同じくらい
 
-# - category: S\NP
-#   semantics: \E B I H. B(\F x.True, I(\d1 O x. forall d. (H(E, d) | E(x, O(d, d1))), \x. exists d. (E(x, d) & H(E, d)), \d1 O x. forall d. (E(x, O(d, d1)) -> H(E, d))))
-#   pos: 形容詞
+- category: (S/S)\NP
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. exists d1 d2. (A(x, d1) & forall d3. ($less(F32(d1), F32(d3)) => -A(x, d3)) & A(y, d2) & forall d4. ($less(F32(d2), F32(d4)) => -A(y, d4)) & $less($uminus(_d0), $difference(d1, d2)) & $less($difference(d1, d2), _d0)), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y. A(y, _th), \f s.f), C1, C2, C3, K, \f s.s)))
+  base: ぐらい
+
+- category: (S/S)\NP
+  semantics: \E Q S3 C1 C2 C3 K. S3(\A F31 F32 F4 x. Q(\I.I, \y. forall d. (A(x, d) -> A(y, d))), C1, C2, C3, K)
+  base: と少なくとも同じくらい
+
+- category: (S/S)\NP
+  semantics: \E Q S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. Q(\I.I, \y. forall d. (A(y, d) -> A(x, d)), \f s.f), C1, C2, C3, K, \f s.f), (Q(\F x.True, \x.True, \f s.s) & S3(\A F31 F32 F4 x. Q(\I.I, \y. A(y, _th), \f s.f), C1, C2, C3, K, \f s.s)))
+  base: ほど
+
+- category: ((NP/NP)/(NP/NP))\NP
+  semantics: \E Q1 M Q2 N F P. P(forall d. (M(Q2, \A F31 F32 F4 x. (A(x, d) & Q1(N, \y. (x = y), \f s.f)), N, \x.True, \f s.f) -> M(Q2, \A F31 F32 F4 x. (A(x, d)), N, F, \f s.f)), (M(Q2, \A F31 F32 F4 x. (A(x, _th) & Q1(N, \y. (x = y), \f s.f)), N, \x.True, \f s.s)))
+  base: ほど
 
 - category: S\NP
-  semantics: \E Q I C1 C2 C3 K. prod(Q(\I.I, \x. I(\H. exists d. (E(x, d) & H(E, d)), \F3 H. forall d. (E(x, F3(d)) | H(E, d)), \H. H(E))), Q(\I.I, \x. I(\H. exists d. (E(x, d) & H(E, d)), \F3 H. forall d. (E(x, F3(d)) | H(E, d)), \H. H(E))))
+  semantics: \E Q N3 C1 C2 C3 K P. P(Q(\I.I, \x. N3(E, \d. d, \d. d, \t. t, x), \f s.f), (Q(\F x.True, \x.True, \f s.s) & Q(\I.I, \x. N3(E, \d. d, \d. d, \t. t, x), \f s.f)))
   pos: 形容詞
 
 - category: S\NP
-  semantics: \L R Q I C1 C2 C3 K P. P(Q(\I.I, \x. I(\H. exists d. (_早起き(x, d) & H(_早起き, d)), \F3 H. forall d. (_早起き(x, F3(d)) | H(_早起き, d)), \H. H(_早起き))), Q(\I.I, \x. I(\H. exists d. (_早起き(x, d) & H(_早起き, d)), \F3 H. forall d. (_早起き(x, F3(d)) | H(_早起き, d)), \H. H(_早起き))))
-  child0_surf: 早起き
-  child1_surf: だ
+  semantics: \E Q N3 C1 C2 C3 K P. P(Q(\I.I, \x. N3(E, \d. d, \d. $uminus(d), \t. -t, x), \f s.f), (Q(\F x.True, \x.True, \f s.s) & Q(\I.I, \x. N3(E, \d. d, \d. $uminus(d), \t. -t, x), \f s.f)))
+  pos: 形容詞
+  entity: NEG
 
 - category: S\NP
-  semantics: \E Q I C1 C2 C3 K. Q(\I.I, \x. I(\H. exists d. (E(x, d) & H(E, d)), \F3 H. forall d. (E(x, F3(d)) | H(E, d))))
-  pos: 形容動詞
+  semantics: \E Q N3 C1 C2 C3 K P. P(Q(\I.I, \x. N3(E, \d. d, \d. d, \t. t, x), \f s.f), (Q(\F x.True, \x.True, \f s.s) & Q(\F x.True, \x. N3(E, \d. d, \d. d, \t. t, x), \f s.f)))
+  pos1: 形容動詞語幹
+
+- category: S\NP
+  semantics: \E Q N3 C1 C2 C3 K P. P(Q(\I.I, \x. N3(E, \d. d, \d. $uminus(d), \t. -t, x), \f s.f), (Q(\F x.True, \x.True, \f s.s) & Q(\F x.True, \x. N3(E, \d. d, \d. $uminus(d), \t. -t, x), \f s.f)))
+  pos1: 形容動詞語幹
+  entity: NEG
+
+- category: S\NP
+  semantics: \L R. L
+  child0_pos1: 形容動詞語幹
+  child1_base: だ
+
+- category: NP/NP
+  semantics: \E Q N3 N F P. P(Q(\G x. N(\y. (G(y) & N3(many, \d. d, \d. d, \t. t, y)), x), F, \f s.f), Q(\G x. N(\y. (G(y) & N3(many, \d. d, \d. d, \t. t, y)), x), F, \f s.s))
+  surf: 多くの
 
 - category: S
   semantics: \E. E
   pos: 形容詞
 
 - category: NP
-  semantics: \L R x N F. (N(\H. exists d. (L(x, d) & H(L, d)), \H. forall d. (L(x,d) | H(L, d))))
+  semantics: \L R N F P. P(exists x. (N(L, \d.d, x) & F(x)), True)
   child0_pos: 形容詞
   child1_surf: さ
 
-- category: NP[adj=true]/NP
-  semantics: \L R Q I1 N G3 x. I1(\H. exists d. (Q(\G. N(\y. (G(y) & many(y, d) & G3(x, y))), \x.True) & H(\x d. Q(\G. N(\z. (G(z) & many(z, d) & G3(x, z))), \x.True), d)))
-  child0_surf: 多く
-  child1_surf: の
-
 - category: NP
-  semantics: \L R Q I1 N G3 x. I1(\H. forall d. (Q(\G. N(\y. (G(y) & many(y, $sum(d, L)) & G3(x, y))), \x.True) | H(\x d. Q(\G. N(\z. (G(z) & many(z, d) & G3(x, z))), \x.True), d)))
-  child0_child0_pos1: 数
-  child0_child1_pos2: 助数詞
-  child1_surf: 多く
-
-- category: NP[adj=true]/NP
-  semantics: \L R. L
-  child0_child1_surf: 多く
-  child1_surf: の
-
-- category: NP[adj=true]
-  semantics: \L R Q1 Q2 I1 N G3 x. I1(\H. forall d. (Q2(\G. N(\y. (G(y) & many(y, Q1(\I.I, \x. $product(x, d))) & G3(x, y))), \x.True) | H(\x d. exists z. (Q(\G. N(\y. (G(y) & many(y, d) & G3(x, y)), z), \x.True)), d)))
-  child1_child0_pos1: 数
-  child1_child1_pos2: 助数詞
+  semantics: \L R N F P. P(exists x. (N(L, \d.$uminus(d), x) & F(x)), True)
+  child0_pos: 形容詞
+  child0_entity: NEG
+  child1_surf: さ
 
 - category: S/S
   semantics: \E. E
@@ -992,8 +1121,12 @@
   semantics: \E. E
   pos1: 数
 
-- category: S/S
-  semantics: \L R S3 I1 C1 C2 C3 K. S3(\A1 A2. I1(A2(\d. $sum(d, L))), C1, C2, C3, K)
+- category: S[measure=true]/S
+  semantics: \L R S3 N3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. N3(A, \d. $sum(d, F32(L)), F32, F4, x), C1, C2, C3, K, \f s.f), True)
+  child0_pos1: 数
+
+- category: (NP[measure=true]/NP)/(NP/NP)
+  semantics: \L R M Q N3 N F P. P(M(Q, \A F31 F32 F4 x. N3(A, \d. $sum(d, F32(L)), F32, F4, x), N, F, \f s.f), (Q(\F x.True, \x.True, \f s.s) & M(Q, \A F31 F32 F4 x.True, N, F, \f s.s)))
   child0_pos1: 数
 
 - category: NP/NP
@@ -1001,26 +1134,22 @@
   child0_pos1: 数
 
 - category: NP
-  semantics: \L R N F. (N(\x.True, L) & F(L))
+  semantics: \L R N F P. P((N(\x.True, L) & F(L)), True)
   child0_pos1: 数
 
 - category: S/S
-  semantics: \L R S3 I1 C1 C2 C3 K. S3(\A1 A2. I1(A2(\d. $product(d, L))), C1, C2, C3, K)
-  child0_pos1: 数
-  child1_surf: 倍
-
-# - category: S/S
-#   semantics: \E I. I(\M1 M2 M3. M2)
-#   surf: dgr
-
-- category: S/S
-  semantics: \E S3 I1 C1 C2 C3 K. S3(\A1 A2. I1(A1), C1, C2, C3, K)
-  surf: dgr
-
-# - category: S/S
-#   semantics: \E A C1 C2 C3 K. A(\H d. (d = _th(H,_u)))
-#   surf: cmp
-
-- category: S/S
-  semantics: \E S3 C1 C2 C3 K. S3(\A1. A1(\H d. (d = _th)), C1, C2, C3, K)
+  semantics: \E S3 C1 C2 C3 K P. P(S3(\A F31 F32 F4 x. A(x, _th), C1, C2, C3, K, \f s.f), S3(\A F31 F32 F4 x.True, C1, C2, C3, K, \f s.s))
   surf: cmp
+
+- category: NP/NP
+  semantics: \L R Q N F P. P(Q(\G z. N(\y. (G(y) & exists d. (many(y, d))), z), F, \f s.f), Q(\F x.True, \x.True, \f s.s))
+  child0_child0_child0_surf: 何
+  child0_child0_child1_pos2: 助数詞
+  child0_child1_surf: か
+  child1_surf: の
+
+- category: NP/NP
+  semantics: \L R Q N F P. P(Q(\G z. N(\y. (G(y) & exists d. (many(y, d) & L(\I.I, \d1. (d = d1), \f s.f))), z), F, \f s.f), Q(\F x.True, \x.True, \f s.s))
+  child0_child0_pos1: 数
+  child0_child1_pos2: 助数詞
+  child1_surf: の

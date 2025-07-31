@@ -32,7 +32,7 @@ class TranslatedSentiWordNetCorpusReader(CorpusReader):
 
 
 sentiwordnet = LazyCorpusLoader(
-    'sentiwordnet', TranslatedSentiWordNetCorpusReader, 'SentiWordNet_translated.txt', encoding='utf-8')
+    'sentiwordnet', TranslatedSentiWordNetCorpusReader, 'SentiWordNet_translated.dic', encoding='utf-8')
 
 if __name__ == "__main__":
     print(sentiwordnet.senti_synset("a", "賢い").pos_score())
