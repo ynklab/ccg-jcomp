@@ -95,3 +95,7 @@ Yosuke Mikami, Daiki Matsuoka, and Hitomi Yanaka.  2025. Implementing a logical 
     publisher = "Association for Computational Linguistics"
 }
 ```
+
+## Contact
+If you have any questions or feedback, please open an issue.
+For private inquiries, please contact ymikami(at)is.s.u-tokyo.ac.jp
